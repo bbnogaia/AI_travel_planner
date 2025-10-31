@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import OpenAI from "openai";
+import serverless from "serverless-http";
 
 const app = express();
 app.use(cors());
@@ -48,10 +49,11 @@ Esempio:
       temperature: 0.8,
     });
 
-    const text = response.output_text || JSON.stringify(response, null, 2);
+    let text = response.output_text || "";
+
     res.json({ itinerary: text });
   } catch (err) {
-    console.error(err);
+    console.error("Errore interno /itinerary:", err);
     res.status(500).json({
       error: "Errore nella generazione del piano",
       detail: err.message,
@@ -59,4 +61,4 @@ Esempio:
   }
 });
 
-export default app;
+export default serverless(app);

@@ -81,7 +81,8 @@ function App() {
     }
 
     try {
-      const res = await fetch("http://localhost:5001/api/itinerary", {
+      const API_URL = process.env.VITE_API_URL || "http://localhost:5001";
+      const res = await fetch(`${API_URL}/api/itinerary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

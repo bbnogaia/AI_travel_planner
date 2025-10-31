@@ -2,28 +2,28 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
+import serverless from "serverless-http";
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT;
-console.log("Avvio server...");
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// middleware per loggare ogni request in arrivo
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
+app.get("/", (req, res) => {
+  res.send("Travel Planner API attiva su Vercel!");
+});
+
+app.get("/api/ping", (req, res) => {
+  res.send("pong");
 });
 
 app.post("/api/itinerary", async (req, res) => {
   try {
-    const { destination, days, interests } = req.body || {};
+    const { destination, days, interests } = req.body;
 
     if (!destination || !days) {
       return res
@@ -79,7 +79,7 @@ Esempio:
       console.warn(
         "Impossibile estrarre testo dalla risposta OpenAI. Inviaamo l'intero oggetto al client."
       );
-      return res.status(500).json({
+      res.status(500).json({
         error: "OpenAI returned an unexpected response format",
         raw: response,
       });
@@ -87,21 +87,17 @@ Esempio:
 
     try {
       const parsed = JSON.parse(text);
-      return res.json({ itinerary: parsed });
-    } catch (parseErr) {
-      return res.json({ itinerary: text });
+      res.json({ itinerary: parsed });
+    } catch {
+      res.json({ itinerary: text });
     }
   } catch (err) {
     console.error("Errore interno /api/itinerary:", err);
-    return res.status(500).json({
+    res.status(500).json({
       error: "Errore nella generazione del piano",
       detail: err.message || err,
     });
   }
 });
 
-app.get("/ping", (req, res) => {
-  res.send("pong");
-});
-
-export default app;
+export default serverless(app);

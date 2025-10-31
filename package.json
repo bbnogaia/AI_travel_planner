@@ -1,14 +1,10 @@
 {
-  "builds": [
-    {
-      "src": "server/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "server/index.js"
-    }
-  ]
+  "name": "ai-travel-planner",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd client && npm install && npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {}
 }

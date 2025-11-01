@@ -10,7 +10,7 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "src": "/", "dest": "/client/dist/index.html" },
-    { "src": "/assets/(.*)", "dest": "/client/dist/assets/$1" }
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/((?!api/).*)", "dest": "/$1" }
   ]
 }

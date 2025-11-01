@@ -17,6 +17,10 @@ app.get("/ping", (req, res) => {
   res.send("pong");
 });
 
+app.get("/", (req, res) => {
+  res.send("Server AI Travel Planner attivo! Usa /ping o POST /api/itinerary");
+});
+
 app.post("/api/itinerary", async (req, res) => {
   try {
     const { destination, days, interests } = req.body || {};

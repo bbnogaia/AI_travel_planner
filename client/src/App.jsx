@@ -83,7 +83,7 @@ function App() {
     const apiBase =
       import.meta.env.MODE === "development"
         ? "http://localhost:5001"
-        : "https://ai-travel-planner-git-feature-vercel-gaias-projects-fa9d8384.vercel.app/";
+        : "https://ai-travel-planner-git-feature-vercel-gaias-projects-fa9d8384.vercel.app";
 
     try {
       const res = await fetch(`${apiBase}/api/itinerary`, {

@@ -1,18 +1,17 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
 import OpenAI from "openai";
 
-dotenv.config();
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Metodo non consentito" });
+  }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-app.post("/api/itinerary", async (req, res) => {
   try {
     const { destination, days, interests } = req.body || {};
 
@@ -22,11 +21,17 @@ app.post("/api/itinerary", async (req, res) => {
         .json({ error: "destination e days sono obbligatori" });
     }
 
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const prompt = `
 Crea un piano di viaggio di ${days} giorni a ${destination},
 concentra il piano su: ${
       Array.isArray(interests) ? interests.join(", ") : interests
     }.
+Includi per ogni giorno: colazione, pranzo, cena e 2-3 attività principali.
+Rispondi in formato JSON valido.
     `;
 
     const response = await openai.responses.create({
@@ -34,18 +39,20 @@ concentra il piano su: ${
       input: prompt,
     });
 
-    const text =
-      response.output_text ||
-      response.output
-        ?.map((o) => (o.content || []).map((c) => c.text || "").join(""))
-        .join("\n") ||
-      "";
+    const text = response.output_text || "";
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = text;
+    }
 
-    return res.json({ itinerary: JSON.parse(text) });
+    return res.status(200).json({ itinerary: parsed });
   } catch (err) {
-    console.error("Errore /api/itinerary:", err);
-    return res.status(500).json({ error: err.message || "Errore interno" });
+    console.error("Errore interno /api/itinerary:", err);
+    return res.status(500).json({
+      error: "Errore nella generazione del piano",
+      detail: err.message || err,
+    });
   }
-});
-
-export default app;
+}

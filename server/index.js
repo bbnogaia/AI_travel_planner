@@ -13,6 +13,8 @@ app.use(
 );
 app.use(express.json());
 
+app.options("/api/itinerary", cors());
+
 // Route di test
 app.get("/ping", (req, res) => {
   res.send("pong");

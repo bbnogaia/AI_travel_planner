@@ -9,10 +9,14 @@ export default async function handler(req, res) {
     res.status(200).end();
     return;
   }
+  console.log(`Richiesta ricevuta: Metodo ${req.method}, URL ${req.url}`);
   if (req.method !== "POST") {
+    console.log("sono nell'if di NON POST");
     res.status(405).json({ error: "Metodo non consentito" });
     return;
   }
+
+  console.log("Dati ricevuti nel body POST:", req.body);
 
   try {
     const { destination, days, interests } = req.body || {};

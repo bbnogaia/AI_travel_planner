@@ -1,10 +1,9 @@
 import express from "express";
 import cors from "cors";
 import OpenAI from "openai";
+import "dotenv/config";
 
 const app = express();
-app.use(express.json());
-
 app.use(
   cors({
     origin: "*",
@@ -12,6 +11,7 @@ app.use(
     allowedHeaders: ["Content-Type"],
   })
 );
+app.use(express.json());
 
 // Route di test
 app.get("/ping", (req, res) => {

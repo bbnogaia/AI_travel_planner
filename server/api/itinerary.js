@@ -1,7 +1,10 @@
 import OpenAI from "openai";
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://ai-travel-planner-frontend-git-f-58d630-gaias-projects-fa9d8384.vercel.app/"
+  );
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 

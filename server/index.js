@@ -13,15 +13,13 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
+app.get("/ping", (req, res) => {
+  res.send("pong");
 });
 
 app.post("/api/itinerary", async (req, res) => {
   try {
     const { destination, days, interests } = req.body || {};
-
     if (!destination || !days) {
       return res
         .status(400)
@@ -43,27 +41,25 @@ Rispondi in formato JSON valido: un array di oggetti con campi "giorno", "attivi
       temperature: 0.8,
     });
 
-    let text =
+    const text =
       response.output_text ||
       response.output
         ?.map((o) => o.content?.map((c) => c.text || "").join(""))
         .join("") ||
       "";
 
-    if (!text) {
-      console.warn("Nessun testo trovato nella risposta OpenAI");
-      return res.status(500).json({ error: "Risposta non valida da OpenAI" });
-    }
+    if (!text)
+      return res.status(500).json({ error: "Risposta vuota da OpenAI" });
 
     try {
       const parsed = JSON.parse(text);
-      return res.json({ itinerary: parsed });
+      res.json({ itinerary: parsed });
     } catch {
-      return res.json({ itinerary: text });
+      res.json({ itinerary: text });
     }
   } catch (err) {
     console.error("Errore interno /api/itinerary:", err);
-    return res.status(500).json({
+    res.status(500).json({
       error: "Errore nella generazione del piano",
       detail: err.message || err,
     });

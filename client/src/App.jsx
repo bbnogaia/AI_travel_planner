@@ -82,7 +82,7 @@ function App() {
 
     try {
       const apiBase =
-        import.meta.env.VITE_API_BASE_URL || window.location.origin;
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
 
       const res = await fetch(`${apiBase}/api/itinerary`, {
         method: "POST",

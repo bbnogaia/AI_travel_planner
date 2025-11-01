@@ -9,6 +9,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
   if (req.method !== "POST") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
     return res.status(405).json({ error: "Metodo non consentito" });
   }
 
@@ -21,9 +22,7 @@ export default async function handler(req, res) {
         .json({ error: "destination e days sono obbligatori" });
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const prompt = `
 Crea un piano di viaggio di ${days} giorni a ${destination},

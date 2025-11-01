@@ -1,17 +1,19 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import OpenAI from "openai";
 
-dotenv.config();
-
 const app = express();
-app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+app.options("*", cors());
 
 app.get("/ping", (req, res) => {
   res.send("pong");
@@ -22,14 +24,14 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/itinerary", async (req, res) => {
-  try {
-    const { destination, days, interests } = req.body || {};
-    if (!destination || !days) {
-      return res
-        .status(400)
-        .json({ error: "destination e days sono obbligatori" });
-    }
+  const { destination, days, interests } = req.body;
 
+  if (!destination || !days) {
+    return res.status(400).json({ error: "Missing destination or days." });
+  }
+
+  try {
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const prompt = `
 Crea un piano di viaggio di ${days} giorni a ${destination},
 concentra il piano su: ${
@@ -38,36 +40,28 @@ concentra il piano su: ${
 Includi per ogni giorno: colazione, pranzo, cena e 2-3 attività principali.
 Rispondi in formato JSON valido: un array di oggetti con campi "giorno", "attivita", "descrizione".
 `;
-
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: prompt,
-      temperature: 0.8,
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
     });
 
-    const text =
-      response.output_text ||
-      response.output
-        ?.map((o) => o.content?.map((c) => c.text || "").join(""))
-        .join("") ||
-      "";
-
-    if (!text)
-      return res.status(500).json({ error: "Risposta vuota da OpenAI" });
+    const text = completion.choices[0].message.content;
+    let itinerary;
 
     try {
-      const parsed = JSON.parse(text);
-      res.json({ itinerary: parsed });
+      itinerary = JSON.parse(text);
     } catch {
-      res.json({ itinerary: text });
+      itinerary = [{ giorno: 1, attivita: "Parsing error", descrizione: text }];
     }
-  } catch (err) {
-    console.error("Errore interno /api/itinerary:", err);
-    res.status(500).json({
-      error: "Errore nella generazione del piano",
-      detail: err.message || err,
-    });
+
+    res.json({ itinerary });
+  } catch (error) {
+    console.error("Errore API:", error);
+    res
+      .status(500)
+      .json({ error: "Errore durante la generazione dell'itinerario." });
   }
 });
 
-export default app;
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`Server avviato sulla porta ${PORT}`));

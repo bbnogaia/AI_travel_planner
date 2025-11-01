@@ -80,8 +80,13 @@ function App() {
       return;
     }
 
+    const apiBase =
+      import.meta.env.MODE === "development"
+        ? "http://localhost:5001"
+        : "https://ai-travel-planner-git-feature-vercel-gaias-projects-fa9d8384.vercel.app/";
+
     try {
-      const res = await fetch("http://localhost:5001/api/itinerary", {
+      const res = await fetch(`${apiBase}/api/itinerary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

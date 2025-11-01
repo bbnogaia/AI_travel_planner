@@ -6,14 +6,11 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    res.status(200).setHeader("Access-Control-Allow-Origin", "*").end();
+    res.status(200).end();
     return;
   }
   if (req.method !== "POST") {
-    res
-      .status(405)
-      .setHeader("Access-Control-Allow-Origin", "*")
-      .json({ error: "Metodo non consentito" });
+    res.status(405).json({ error: "Metodo non consentito" });
     return;
   }
 

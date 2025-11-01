@@ -4,18 +4,19 @@ import dotenv from "dotenv";
 import OpenAI from "openai";
 
 dotenv.config();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5001;
 console.log("Avvio server...");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// middleware per loggare ogni request in arrivo
+// Middleware per loggare ogni request in arrivo
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
@@ -52,6 +53,7 @@ Esempio:
     });
 
     let text = "";
+
     if (response.output && response.output.length > 0) {
       text = response.output
         .map((o) => {

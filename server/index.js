@@ -13,16 +13,17 @@ app.use(
   })
 );
 
-app.options("*", cors());
-
+// Route di test
 app.get("/ping", (req, res) => {
   res.send("pong");
 });
 
+// Home (facoltativa)
 app.get("/", (req, res) => {
   res.send("Server AI Travel Planner attivo! Usa /ping o POST /api/itinerary");
 });
 
+// Rotta principale
 app.post("/api/itinerary", async (req, res) => {
   const { destination, days, interests } = req.body;
 
@@ -32,14 +33,10 @@ app.post("/api/itinerary", async (req, res) => {
 
   try {
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const prompt = `
-Crea un piano di viaggio di ${days} giorni a ${destination},
-concentra il piano su: ${
-      Array.isArray(interests) ? interests.join(", ") : interests
-    }.
-Includi per ogni giorno: colazione, pranzo, cena e 2-3 attività principali.
-Rispondi in formato JSON valido: un array di oggetti con campi "giorno", "attivita", "descrizione".
-`;
+    const prompt = `Crea un itinerario dettagliato di ${days} giorni a ${destination}, 
+      con attività legate a: ${interests?.join(", ") || "generiche"}.
+      Restituisci un array JSON di oggetti con chiavi: "giorno", "attivita", "descrizione".`;
+
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],

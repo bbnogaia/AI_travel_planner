@@ -1,10 +1,9 @@
 import OpenAI from "openai";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const client = new OpenAI({});
 
 export default async function handler(req, res) {
+  // 1. Validazione Metodo e Dati
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Metodo non consentito" });
   }
@@ -17,57 +16,49 @@ export default async function handler(req, res) {
       .json({ error: "destination e days sono obbligatori" });
   }
 
-  const prompt = `
-Crea un piano di viaggio di ${days} giorni a ${destination},
-concentra il piano su: ${
-    Array.isArray(interests) ? interests.join(", ") : interests
-  }.
-Includi per ogni giorno: colazione, pranzo, cena e 2-3 attività principali.
-Rispondi in formato JSON valido: un array di oggetti con campi "giorno", "attivita", "descrizione".
-Esempio:
-[
-  {"giorno": 1, "attivita": "Visita al museo", "descrizione": "..." },
-  ...
-]
+  // 2. Istruzione di Sistema e Prompt Utente
+  const interestList = Array.isArray(interests)
+    ? interests.join(", ")
+    : interests;
+
+  const systemInstruction = `
+    Sei un Travel Planner esperto. Il tuo compito è creare un itinerario di viaggio dettagliato.
+    Rispondi ESCLUSIVAMENTE con un array di oggetti JSON validi.
+    Il JSON DEVE aderire alla seguente struttura: [{"giorno": 1, "attivita": "Nome Attività", "descrizione": "Descrizione Dettagliata"}, ...]
+    Assicurati che l'output sia solo JSON, senza preamboli, spiegazioni o markdown.
+  `;
+
+  const userPrompt = `
+    Crea un itinerario di viaggio di ${days} giorni a ${destination}.
+    Concentra il piano sugli interessi: ${interestList}.
+    Includi per ogni giorno: colazione, pranzo, cena e 2-3 attività principali,
+    ma formatta TUTTO il contenuto come un unico array di oggetti JSON come richiesto dalla istruzione di sistema.
   `;
 
   try {
-    const response = await client.responses.create({
-      model: "gpt-4.1-mini",
-      input: prompt,
+    // 3. Chiamata all'API OpenAI
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: userPrompt },
+      ],
       temperature: 0.8,
+      response_format: { type: "json_object" },
     });
 
-    let text = "";
-    if (response.output && response.output.length > 0) {
-      text = response.output
-        .map((o) => {
-          if (!o.content) return "";
-          return o.content.map((c) => c.text || "").join("");
-        })
-        .join("\n");
-    }
+    const jsonString = response.choices[0].message.content.trim();
 
-    if (!text && response.output_text) text = response.output_text;
+    const itineraryData = JSON.parse(jsonString);
 
-    if (!text) {
-      return res.status(500).json({
-        error: "OpenAI returned an unexpected response format",
-        raw: response,
-      });
-    }
-
-    try {
-      const parsed = JSON.parse(text);
-      res.status(200).json({ itinerary: parsed });
-    } catch {
-      res.status(200).json({ itinerary: text });
-    }
+    // 5. Risposta al Client Frontend
+    res.status(200).json({ itinerary: itineraryData });
   } catch (err) {
     console.error("Errore /api/itinerary:", err);
     res.status(500).json({
-      error: "Errore nella generazione del piano",
-      detail: err.message || err,
+      error: "Errore nella generazione del piano di viaggio",
+      detail:
+        err.message || "Verifica la tua OPENAI_API_KEY su Vercel e i log.",
     });
   }
 }

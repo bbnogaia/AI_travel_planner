@@ -6,6 +6,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
+    console.log("entro nell'if di OPTIONS");
     res.status(200).end();
     return;
   }
